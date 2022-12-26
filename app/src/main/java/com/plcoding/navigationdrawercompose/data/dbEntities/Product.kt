@@ -16,5 +16,5 @@ import androidx.room.PrimaryKey
 class Product(
     @PrimaryKey val id : Int,
     @ColumnInfo val name : String,
-    @ColumnInfo val price : String
+    @ColumnInfo val price : Int
 )

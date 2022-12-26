@@ -28,20 +28,43 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
+import com.plcoding.navigationdrawercompose.data.db.DB
+import com.plcoding.navigationdrawercompose.data.dbEntities.Order
+import com.plcoding.navigationdrawercompose.data.dbEntities.Product
+import com.plcoding.navigationdrawercompose.screens.AccountantScreen
+import com.plcoding.navigationdrawercompose.screens.CashierScreen
+import com.plcoding.navigationdrawercompose.screens.StorekeeperScreen
 import com.plcoding.navigationdrawercompose.ui.theme.NavigationDrawerComposeTheme
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 
 
 enum class Screen {
     Home,
-    About,
-    Dissertation,
-    Plans
+    Accountant,
+    Cashier,
+    Storekeeper
 }
 
-class MainActivity : ComponentActivity() {
+interface listener{
+    fun sellProduct(product: Product, nalBeznal: NalBeznal)
+    fun rejectSell()
+    fun order(order : Order)
+    fun approveOrder(order: Order)
+}
+
+enum class NalBeznal(){
+    Nal,
+    Beznal
+}
+
+class MainActivity : ComponentActivity(), listener {
+    val db = DB.buildDatabase(this)
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         setContent {
             var curScreen by rememberSaveable {
                 mutableStateOf(Screen.Home)
@@ -57,9 +80,9 @@ class MainActivity : ComponentActivity() {
                     content = {
                         when (curScreen) {
                             Screen.Home -> MainContent()
-                            Screen.About -> AboutContent()
-                            Screen.Dissertation -> DissertationContent()
-                            Screen.Plans -> PlansContent()
+                            Screen.Accountant -> AccountantScreen()
+                            Screen.Cashier -> CashierScreen()
+                            Screen.Storekeeper -> StorekeeperScreen()
                         }
                     }
                 )
@@ -68,55 +91,57 @@ class MainActivity : ComponentActivity() {
     }
 
     @Composable
-    private fun AboutContent(){
-        Column() {
-            Text("Интересный факт обо мне - я люблю повторяться. Я студент 4 курса, прикладной математики. Учусь в УрФУ, на матмехе.\n" +
-                    "    Занимаюсь андроид разработкой. Работаю в Контуре, уже полтора года. В гугл особо не стремлюсь, мне и здесь хорошо\n" +
-                    "    Курс конечно отличный, но как мне кажется, во многом устарел. Как минимум вся современная андроид разработка пишет на котлине :)" )
-            Image(painterResource(id = R.drawable.cow), modifier = Modifier.fillMaxSize(),contentDescription = null)
-        }
-    }
-
-    @Composable
-    private fun DissertationContent(){
-        Column() {
-            Text("Я пока не написал диссертацию, и не очень хочу. Я даже толком не знаю что это такое, но могу рассказать анекдот." +
-                    "\nБог прокрастинации обрушил на землю великий потом.")
-            Image(painterResource(id = R.drawable.babka), modifier = Modifier.fillMaxSize(), contentDescription = null)
-        }
-    }
-
-    @Composable
-    private fun PlansContent(){
-        Column() {
-            Text(text = "Закончить универ")
-            Text(text = "Выйти на фуллтайм на работу")
-            Text(text = "Начать зарабатывать 300к/наносек")
-            Text(text = "Профит")
-            Image(painterResource(id = R.drawable.pepe),modifier = Modifier.fillMaxSize(), contentDescription = null)
-        }
-    }
-
-    @Composable
     private fun MainContent() {
         Column {
             Text(
                 modifier = Modifier.fillMaxWidth(),
-                textAlign = TextAlign.Start,
-                text = "Романов Александр Васильевич",
+                textAlign = TextAlign.Center,
+                text = "Магазин ШЕСТЕРОЧКА",
                 fontSize = 20.sp,
                 color = Color.Black
             )
-            Image(
-                painter = painterResource(id = R.drawable.me),
-                alignment = Alignment.TopCenter,
-                contentDescription = null
-            )
-            Text(
-                text = """Я студент 4 курса, прикладной математики. Учусь в УрФУ, на матмехе.
-    Занимаюсь андроид разработкой. Работаю в Контуре, уже полтора года. В гугл особо не стремлюсь, мне и здесь хорошо
-    Курс конечно отличный, но как мне кажется, во многом устарел. Как минимум вся современная андроид разработка пишет на котлине :)""".trimMargin()
-            )
+        }
+    }
+
+    override fun sellProduct(product: Product, nalBeznal: NalBeznal) {
+        when(nalBeznal){
+            NalBeznal.Nal ->{
+                GlobalScope.launch {
+                    val curBalance =  db.databaseDao().getBalance()
+                    db.databaseDao().deleteProduct(product)
+                    db.databaseDao().updateBalance(curBalance.copy(cash = curBalance.cash + product.price))
+                }
+            }
+            NalBeznal.Beznal -> {
+                GlobalScope.launch {
+                    val curBalance =  db.databaseDao().getBalance()
+                    db.databaseDao().deleteProduct(product)
+                    db.databaseDao().updateBalance(curBalance.copy(cashless = curBalance.cash + product.price))
+                }
+            }
+        }
+    }
+
+    override fun rejectSell() {
+        TODO("Not yet implemented")
+    }
+
+    override fun order(order: Order) {
+        GlobalScope.launch {
+            db.databaseDao().order(order)
+        }
+    }
+
+    override fun approveOrder(order: Order) {
+        GlobalScope.launch {
+            val curBalance =  db.databaseDao().getBalance()
+            db.databaseDao().deleteOrder(order)
+            val product = db.databaseDao().getProduct(id = order.productId)
+            if (curBalance.cash > 0 ){
+                db.databaseDao().updateBalance(curBalance.copy(cash = curBalance.cash - product.price))
+            } else if (curBalance.cashless > 0){
+                db.databaseDao().updateBalance(curBalance.copy(cashless = curBalance.cash - product.price))
+            }
         }
     }
 }
@@ -158,20 +183,20 @@ private fun MainScreen(
                     ),
                     MenuItem(
                         id = "about",
-                        title = "Обо мне",
-                        contentDescription = "Обо мне",
+                        title = "Кассир",
+                        contentDescription = "Кассир",
                         icon = Icons.Default.Info
                     ),
                     MenuItem(
                         id = "dissertation",
-                        title = "Моя диссертация",
-                        contentDescription = "Моя диссертация",
+                        title = "Бухгалтер",
+                        contentDescription = "Бухгалтер",
                         icon = Icons.Default.Info
                     ),
                     MenuItem(
                         id = "plans",
-                        title = "Мои планы",
-                        contentDescription = "Мои планы",
+                        title = "Складовщик",
+                        contentDescription = "Складовщик",
                         icon = Icons.Default.Info
                     ),
                 ),
@@ -180,14 +205,14 @@ private fun MainScreen(
                         "home" -> {
                             onClickSomewhere(Screen.Home)
                         }
-                        "about" -> {
-                            onClickSomewhere(Screen.About)
+                        "Кассир" -> {
+                            onClickSomewhere(Screen.Cashier)
                         }
-                        "dissertation" -> {
-                            onClickSomewhere(Screen.Dissertation)
+                        "Бухгалтер" -> {
+                            onClickSomewhere(Screen.Accountant)
                         }
-                        "plans" -> {
-                            onClickSomewhere(Screen.Plans)
+                        "Складовщик" -> {
+                            onClickSomewhere(Screen.Storekeeper)
                         }
                     }
                 }
