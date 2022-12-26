@@ -72,21 +72,21 @@ class MainActivity : ComponentActivity(), listener {
             BackHandler() {
                 curScreen = Screen.Home
             }
-            NavigationDrawerComposeTheme {
-                MainScreen(
-                    onClickSomewhere = {
-                        curScreen = it
-                    },
-                    content = {
-                        when (curScreen) {
-                            Screen.Home -> MainContent()
-                            Screen.Accountant -> AccountantScreen()
-                            Screen.Cashier -> CashierScreen()
-                            Screen.Storekeeper -> StorekeeperScreen()
-                        }
-                    }
-                )
-            }
+//            NavigationDrawerComposeTheme {
+//                MainScreen(
+//                    onClickSomewhere = {
+//                        curScreen = it
+//                    },
+//                    content = {
+//                        when (curScreen) {
+//                            Screen.Home -> MainContent()
+//                            Screen.Accountant -> AccountantScreen()
+//                            Screen.Cashier -> CashierScreen()
+//                            Screen.Storekeeper -> StorekeeperScreen()
+//                        }
+//                    }
+//                )
+//            }
         }
     }
 

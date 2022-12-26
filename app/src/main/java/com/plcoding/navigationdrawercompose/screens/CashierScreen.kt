@@ -40,7 +40,8 @@ fun CashierScreen(
                 .fillMaxSize(),
             verticalArrangement = Arrangement.Center
         ) {
-            Text(text = "Название: $productName", fontSize = 18.sp)
+            Text(text = "Позиции: Слива 1шт, Вода 5л 2 шт, Йогурт ирбитский с грушей 3 шт, Печенье московское 1 шт, Гель для душа с апельсином 1 шт, Пакет 2 шт, Подарочный набор для ребенка 3 года 1 шт, Игрушечный динозавр 1 шт, Бекон 1 шт, Молоко 2 шт, Чай принцеса Нури 1 шт, Кофе якобс 1 шт, Яйца С0 1 шт, Виноград киш-миш 0.5 кг, Бананы 3 шт, Сосиски от дяди Вани 6 шт, Сыр 2кг, Торт муравейник 1 шт",
+                fontSize = 18.sp)
             Spacer(Modifier.height(32.dp))
             Text(text = "Цена: $productPrice", fontSize = 18.sp)
             Spacer(Modifier.height(32.dp))
@@ -77,7 +78,7 @@ fun CashierScreenPreview() {
     NavigationDrawerComposeTheme {
         CashierScreen(
             productName = "Торт Муравейник",
-            productPrice = 100,
+            productPrice = 8810,
             onSellByCacheClick = {},
             onSellByCardClick = {}
         )
